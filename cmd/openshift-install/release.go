@@ -2,14 +2,13 @@ package main
 
 import (
 	"github.com/openshift/installer/pkg/release"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 func newReleaseCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "release",
-		Short: "Manage OCP Releases locally",
+		Short: "Manage OCP Releases locally for offline installation",
 		Long:  "",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -43,10 +42,10 @@ func newReleaseCreateBundleCmd() *cobra.Command {
 			cleanup := setupFileHook(rootOpts.dir)
 			defer cleanup()
 
-			err := release.CreateBundle(rootOpts.dir)
-			if err != nil {
-				logrus.Fatal(err)
-			}
+			release.CreateBundle(rootOpts.dir)
+			// if err != nil {
+			// 	logrus.Fatal(err)
+			// }
 		},
 	}
 }
@@ -57,13 +56,13 @@ func newReleasePushCmd() *cobra.Command {
 		Short: "Manage uploads of openshift content",
 		Args:  cobra.ExactArgs(0),
 		Run: func(_ *cobra.Command, _ []string) {
-			//	cleanup := setupFileHook(rootOpts.dir)
-			//	defer cleanup()
-			//
-			//	err := runDestroyCmd(rootOpts.dir)
-			//	if err != nil {
-			//		logrus.Fatal(err)
-			//	}
+			// cleanup := setupFileHook(rootOpts.dir)
+			// defer cleanup()
+
+			// err := runDestroyCmd(rootOpts.dir)
+			// if err != nil {
+			// 	logrus.Fatal(err)
+			// }
 		},
 	}
 }

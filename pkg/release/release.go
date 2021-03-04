@@ -4,7 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/openshift/installer/pkg/rhcos"
+	"github.com/openshift/installer/pkg/types"
 	"github.com/openshift/installer/pkg/version"
 )
 
@@ -31,12 +34,18 @@ type BundleRoot struct {
 
 // CreateBundle retrieves all dependencies for OCP installation
 // and places them into a directory or compressed file.
-func CreateBundle() {
+func CreateBundle(rootDir string) {
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	var arch types.Architecture
+	arch = types.Architecture(types.ArchitectureAMD64)
+	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
 
-	ocpVersion, err := version.Version()
-	rhcosVersion, err := rhcos.VMware(ctx, arch)
+	ocpVersion, _ := version.Version()
+	rhcosVersion, _ := rhcos.VMware(ctx, arch)
+
+	logrus.Infoln("OCP Version: ", ocpVersion)
+	logrus.Infoln("RHCOS Version: ", rhcosVersion)
+	logrus.Debugln("Arch: ", arch)
 
 	bundle := BundleRoot{
 		Version: ocpVersion,
@@ -45,12 +54,13 @@ func CreateBundle() {
 			Dir2: "images",
 			Dir3: "rhcos",
 			Info: BundleInfo{
-				Arch:     "x86_64",
+				Arch:     string(arch),
 				Version:  ocpVersion,
 				RhcosVer: rhcosVersion,
 			},
 		},
 	}
+	logrus.Debugln(bundle)
 
 	// create directory tree
 	// if directory tree is not built or missing subdirectories
@@ -63,6 +73,7 @@ func CreateBundle() {
 	// if all image digests are present/correct
 	// return nil
 	// else mirrorImages()
+	mirrorImages()
 
 	// Get rhcos image
 	// if rhcos image hash matches
