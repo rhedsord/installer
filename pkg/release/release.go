@@ -90,7 +90,7 @@ func CreateBundle(baseDir string) {
 	bundleInfo.writeInfo(baseDir)
 	// else return nil
 	//
-
+	rootDir := baseDir
 	// Get release images
 	// if all image digests are present/correct
 	// return nil
