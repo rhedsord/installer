@@ -10,7 +10,7 @@ import (
 
 // VHD fetches the URL of the public Azure storage bucket containing the RHCOS image
 func VHD(ctx context.Context, arch types.Architecture) (string, error) {
-	meta, err := fetchRHCOSBuild(ctx, arch)
+	meta, err := FetchRHCOSBuild(ctx, arch)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to fetch RHCOS metadata")
 	}

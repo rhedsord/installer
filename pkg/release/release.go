@@ -4,69 +4,91 @@ import (
 	"context"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
+	"github.com/openshift/installer/pkg/asset/installconfig"
+	assetstore "github.com/openshift/installer/pkg/asset/store"
 	"github.com/openshift/installer/pkg/rhcos"
-	"github.com/openshift/installer/pkg/types"
 	"github.com/openshift/installer/pkg/version"
+	"github.com/sirupsen/logrus"
+)
+
+const (
+	arch = "amd64"
 )
 
 // BundleInfo is the metadata of the bundle
 type BundleInfo struct {
-	Arch     string
-	Version  string
-	RhcosVer string
+	Arch     string `json:"arch"`
+	Version  string `json:"version"`
+	RhcosVer string `json:"rhcosVer"`
 }
 
-// subtree is the
+// subtree is the content of a versioned bundle
 type subTree struct {
-	Dir1 string
-	Dir2 string
-	Dir3 string
-	Info BundleInfo
+	Client string `json:"client"`
+	Images string `json:"images,omitempty"`
+	Rhcos  string `json:"rhcos,omitempty"`
 }
 
 // BundleRoot is the directory/file structure of the bundle
 type BundleRoot struct {
-	Version string
+	Version string `json:"version,omitempty"`
 	SubTree subTree
 }
 
 // CreateBundle retrieves all dependencies for OCP installation
 // and places them into a directory or compressed file.
-func CreateBundle(rootDir string) {
+func CreateBundle(baseDir string) {
 
-	var arch types.Architecture
-	arch = types.Architecture(types.ArchitectureAMD64)
+	if AssetStore, err := assetstore.NewStore(baseDir); err == nil {
+
+		logrus.Info("AssestStore: ")
+		if installConfig, err := AssetStore.Load(&installconfig.InstallConfig{}); err == nil && installConfig != nil {
+			logrus.Debug("Install-config: ", installConfig.Name())
+			logrus.Info("Platform: ", installConfig.(*installconfig.InstallConfig).Config.PullSecret)
+		} else {
+			logrus.Errorln("Install Config Load failed: ", err)
+		}
+	} else {
+		logrus.Errorln("Assest Store failed: ", err)
+	}
+	// arch := config.ControlPlane.Architecture
 	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
-
+	logrus.Info("ctx: ", ctx)
 	ocpVersion, _ := version.Version()
-	rhcosVersion, _ := rhcos.VMware(ctx, arch)
+	logrus.Info("ocpVersion: ", ocpVersion)
+	meta, _ := rhcos.FetchRHCOSBuild(ctx, arch)
+	logrus.Info("meta: ", meta)
+	rhcosVersion := meta.OSTreeVersion
+	logrus.Info("rhcosver ", rhcosVersion)
 
-	logrus.Infoln("OCP Version: ", ocpVersion)
-	logrus.Infoln("RHCOS Version: ", rhcosVersion)
-	logrus.Debugln("Arch: ", arch)
+	// logrus.Infoln("OCP Version: ", ocpVersion)
+	// logrus.Infoln("RHCOS Version: ", rhcosVersion)
+	// logrus.Debugln("Arch: ", arch)
 
-	bundle := BundleRoot{
+	bundle := &BundleRoot{
 		Version: ocpVersion,
 		SubTree: subTree{
-			Dir1: "client",
-			Dir2: "images",
-			Dir3: "rhcos",
-			Info: BundleInfo{
-				Arch:     string(arch),
-				Version:  ocpVersion,
-				RhcosVer: rhcosVersion,
-			},
+			Client: "client",
+			Images: "images",
+			Rhcos:  "rhcos",
 		},
 	}
-	logrus.Debugln(bundle)
+
+	bundleInfo := &BundleInfo{
+
+		Arch:     arch,
+		Version:  ocpVersion,
+		RhcosVer: rhcosVersion,
+	}
+
+	// }
+	// logrus.Debugln(bundle)
 
 	// create directory tree
 	// if directory tree is not built or missing subdirectories
-	// createTree(version.Version())
+	bundle.createTree(baseDir)
+	bundleInfo.writeInfo(baseDir)
 	// else return nil
-
 	//
 
 	// Get release images

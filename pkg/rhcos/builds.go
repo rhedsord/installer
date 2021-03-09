@@ -50,7 +50,7 @@ type metadata struct {
 	OSTreeVersion string `json:"ostree-version"`
 }
 
-func fetchRHCOSBuild(ctx context.Context, arch types.Architecture) (*metadata, error) {
+func FetchRHCOSBuild(ctx context.Context, arch types.Architecture) (*metadata, error) {
 	file, err := data.Assets.Open(fmt.Sprintf("rhcos-%s.json", arch))
 	if err != nil {
 		return nil, err
