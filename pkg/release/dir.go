@@ -10,9 +10,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//var BundleDir string
+
 func (b BundleRoot) createTree(baseDir string) {
 
-	bundleDir := baseDir + "/" + "bundle" + "/" + b.Version
+	bundleDir := baseDir + "/bundle/" + b.Version
 	logrus.Info("bundle dir: ", bundleDir)
 
 	v := reflect.ValueOf(&b.SubTree).Elem()
@@ -33,13 +35,16 @@ func (b BundleRoot) createTree(baseDir string) {
 func (b BundleInfo) writeInfo(baseDir string) {
 
 	p, _ := json.MarshalIndent(b, "", "    ")
-	logrus.Info(p)
+	logrus.Info(string(p))
 
-	f := baseDir + "bundle/" + b.Version + "/bundle-info.json"
+	f := baseDir + "/bundle/" + b.Version + "/bundle-info.json"
 	logrus.Info(f)
 
 	err := ioutil.WriteFile(f, p, 0777)
 
-	logrus.Info(err)
+	if err != nil {
+		logrus.Error(err)
+
+	}
 
 }
