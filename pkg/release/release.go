@@ -111,6 +111,6 @@ func CreateBundle(baseDir string) {
 	// writeMeta()
 
 	// Compress bundle
-	// compressBundle()
+	createArchive(baseDir)
 
 }
