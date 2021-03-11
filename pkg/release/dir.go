@@ -35,7 +35,7 @@ func (b BundleInfo) writeInfo(baseDir string) {
 	p, _ := json.MarshalIndent(b, "", "    ")
 	logrus.Info(p)
 
-	f := baseDir + "bundle/" + b.Version + "/bundle-info.json"
+	f := baseDir + "/bundle/" + b.Version + "/bundle-info.json"
 	logrus.Info(f)
 
 	err := ioutil.WriteFile(f, p, 0777)
