@@ -12,10 +12,11 @@ import (
 
 //var BundleDir string
 
-func (b BundleRoot) createTree(baseDir string) {
+func (b *BundleRoot) createTree() {
 
-	bundleDir := baseDir + "/bundle/" + b.Version
-	logrus.Info("bundle dir: ", bundleDir)
+	b.BaseDir = b.RootDir + "/bundle"
+	b.BundleDir = b.BaseDir + "/" + b.Version
+	logrus.Info("bundle dir: ", b.BundleDir)
 
 	v := reflect.ValueOf(&b.SubTree).Elem()
 	logrus.Info("children names ", v)
@@ -25,19 +26,19 @@ func (b BundleRoot) createTree(baseDir string) {
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
 		u := fmt.Sprintf("%v", f)
-		n := bundleDir + "/" + u
+		n := b.BundleDir + "/" + u
 		os.MkdirAll(n, 0777)
 
 	}
 
 }
 
-func (b BundleInfo) writeInfo(baseDir string) {
+func (b *BundleInfo) writeInfo(bundle *BundleRoot) {
 
 	p, _ := json.MarshalIndent(b, "", "    ")
 	logrus.Info(string(p))
 
-	f := baseDir + "/bundle/" + b.Version + "/bundle-info.json"
+	f := bundle.BundleDir + "/bundle-info.json"
 	logrus.Info(f)
 
 	err := ioutil.WriteFile(f, p, 0777)
