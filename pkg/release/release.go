@@ -104,12 +104,12 @@ func CreateBundle(baseDir string) {
 	bundleInfo.writeInfo(baseDir)
 	// else return nil
 	//
-	rootDir := baseDir
+
 	// Get release images
 	// if all image digests are present/correct
 	// return nil
 	// else mirrorImages()
-	mirrorImages(rootDir)
+	mirrorImages(baseDir)
 
 	// Get rhcos image
 	// if rhcos image hash matches
@@ -127,6 +127,6 @@ func CreateBundle(baseDir string) {
 	// writeMeta()
 
 	// Compress bundle
-	// compressBundle()
+	createArchive(baseDir)
 
 }
