@@ -12,7 +12,7 @@ import (
 	assetstore "github.com/openshift/installer/pkg/asset/store"
 )
 
-func mirrorImages(bundle *BundleRoot) {
+func downloadContent(bundle *BundleRoot) {
 	logrus.Infoln("Mirroring Images")
 
 	var pullsecret string = "{}"
@@ -41,17 +41,28 @@ func mirrorImages(bundle *BundleRoot) {
 	// logrus.Info("OCP Version: ", ocpVersion)
 
 	if image, err := releaseimage.Default(); err == nil {
-		logrus.Info("release image: ", image)
-		cmd := exec.Command("oc", "adm", "release", "mirror",
+		logrus.Info("Release image: ", image)
+		cmdMirror := exec.Command("oc", "adm", "release", "mirror",
 			image, "--to-dir", bundle.BundleDir+"/"+bundle.SubTree.Images,
 			"--registry-config", psfile)
-		out, errout := cmd.Output()
-		if errout == nil {
-			logrus.Info(string(out))
+
+		if outmir, errmir := cmdMirror.Output(); errmir == nil {
+			logrus.Info(string(outmir))
 		} else {
 			// TODO: Why does it get an exit status 1 even when it runs successfully
-			logrus.Info(string(out))
-			logrus.Error(errout)
+			logrus.Info(string(outmir))
+			logrus.Error(errmir)
+		}
+
+		cmdExtract := exec.Command("oc", "adm", "release", "extract",
+			"--tools", image, "--to", bundle.BundleDir+"/"+bundle.SubTree.Client,
+			"--registry-config", psfile)
+		if outex, errex := cmdExtract.Output(); errex == nil {
+			logrus.Info(string(outex))
+		} else {
+			// TODO: Why does it get an exit status 1 even when it runs successfully
+			logrus.Info(string(outex))
+			logrus.Error(errex)
 		}
 	}
 

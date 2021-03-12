@@ -92,7 +92,7 @@ func CreateBundle(rootDir string) {
 	// if all image digests are present/correct
 	// return nil
 	// else mirrorImages()
-	mirrorImages(bundle)
+	downloadContent(bundle)
 
 	// Get rhcos image
 	// if rhcos image hash matches
