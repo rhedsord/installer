@@ -6,31 +6,37 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
 
 var tarfile *tar.Writer
+var trimPath string
 
 // compress the final bundle
 
-func createArchive(basedir string) {
+func createArchive(bundle *BundleRoot) {
 
-	file, _ := os.Create("filename.tgz")
+	file, _ := os.Create(bundle.BaseDir + "/" + bundle.Version + ".tgz")
 	defer file.Close()
 	gw := gzip.NewWriter(file)
 	defer gw.Close()
 	tarfile = tar.NewWriter(gw)
 	defer tarfile.Close()
 
-	filepath.Walk(basedir, addToTar)
+	logrus.Info("Creating bundle file: " + file.Name())
+
+	trimPath = bundle.BaseDir + "/"
+	filepath.Walk(bundle.BundleDir, addToTar)
 
 }
 
 func addToTar(path string, info os.FileInfo, err error) error {
 	logrus.Debugln("Path: " + path)
 
-	fhdr, _ := tar.FileInfoHeader(info, info.Name())
+	fhdr, _ := tar.FileInfoHeader(info, "")
+	fhdr.Name = strings.TrimPrefix(path, trimPath)
 	tarfile.WriteHeader(fhdr)
 	file, err := os.Open(path)
 	defer file.Close()
