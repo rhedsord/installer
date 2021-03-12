@@ -32,6 +32,11 @@ type metadata struct {
 	}
 	BaseURI string `json:"baseURI"`
 	Images  struct {
+		AWS struct {
+			Path               string `json:"path"`
+			SHA256             string `json:"sha256"`
+			UncompressedSHA256 string `json:"uncompressed-sha256"`
+		} `json:"aws"`
 		QEMU struct {
 			Path               string `json:"path"`
 			SHA256             string `json:"sha256"`
