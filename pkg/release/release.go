@@ -1,6 +1,8 @@
 package release
 
 import (
+	"strings"
+
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/asset/installconfig"
 	assetstore "github.com/openshift/installer/pkg/asset/store"
@@ -54,6 +56,9 @@ func CreateBundle(rootDir string) {
 
 	rhcosVersion := getRhcosVersion(ocpVersion)
 
+	// Remove trailing '/' from directory path
+	rootDir = strings.TrimRight(rootDir, "/")
+
 	platform := getInstallConfig(rootDir).(*installconfig.InstallConfig).Config.Platform.Name()
 	logrus.Info("Platform ", platform)
 
@@ -99,7 +104,7 @@ func CreateBundle(rootDir string) {
 	// return nil
 	// else getRhcos()
 
-	// bundleInfo.downRhcos(baseDir)
+	bundleInfo.downRhcos(bundle)
 
 	// Get binaries
 	// if binary bundles hash match

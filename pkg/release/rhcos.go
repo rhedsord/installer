@@ -153,7 +153,7 @@ func (b BundleInfo) getRhcosName() (string, error) {
 
 }
 
-func (b BundleInfo) downRhcos(baseDir string) error {
+func (b BundleInfo) downRhcos(bundle *BundleRoot) error {
 
 	// First Get RHCOS URL for platform
 	// bundleGetRhcosURL(b)
@@ -166,7 +166,7 @@ func (b BundleInfo) downRhcos(baseDir string) error {
 	filename, err := b.getRhcosName()
 	logrus.Info(filename)
 
-	filepath := baseDir + "/bundle/" + b.Version + "/rhcos/" + filename
+	filepath := bundle.BundleDir + "/" + bundle.SubTree.Rhcos + "/" + filename
 
 	logrus.Info(filepath)
 
