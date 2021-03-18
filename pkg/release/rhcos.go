@@ -16,84 +16,51 @@ import (
 )
 
 func getRhcosVersion(v string) string {
-	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
-	meta, _ := rhcos.FetchRHCOSBuild(ctx, arch)
-	logrus.Info("meta: ", meta)
-	logrus.Info("rhcosver ", meta.OSTreeVersion)
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	meta, _ := rhcos.FetchRHCOSBuild(ctx, archAmd64)
+	logrus.Debug("Meta: ", meta)
+	logrus.Debug("RHCOS version: ", meta.OSTreeVersion)
 	return meta.OSTreeVersion
 }
 
-// func (b BundleInfo) getRhcosName() (string, error) {
-// 	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
+func (bundle BundleInfo) getRhcosURL() (string, error) {
 
-// 	meta, err := rhcos.FetchRHCOSBuild(ctx, arch)
-// 	if err != nil {
-// 		return "", err //, errors.Wrap(err, "failed to fetch RHCOS metadata")
-// 	}
-// 	logrus.Info(meta)
-// 	s := b.Platform
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 
-// 	var platform rhcos.s = rhcos.s(s)
-// 	path := "meta.Images." + b.Platform + ".Path"
-
-// 	rhcosNameURL, err := url.Parse(meta.Images.platform.Path)
-// 	rhcosName := fmt.Sprintf("%v", rhcosNameURL)
-
-// 	if err != nil {
-// 		return "", err
-// 	}
-
-// 	return rhcosName, nil
-// }
-
-func (b BundleInfo) getRhcosURL() (string, error) {
-
-	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
 
 	// get Platform
-	p := b.Platform
+	platfrm := bundle.Platform
 
 	// get arch
-	var a types.Architecture = types.Architecture(b.Arch)
+	var arch types.Architecture = types.Architecture(bundle.Arch)
 
 	var osimage string
 	var err error
-	switch p {
+	switch platfrm {
 	case "aws":
-		osimage, err = rhcos.AWS(ctx, a)
+		osimage, err = rhcos.AWS(ctx, arch)
 	case "gcp":
-		osimage, err = rhcos.GCP(ctx, a)
+		osimage, err = rhcos.GCP(ctx, arch)
 	case "libvirt":
-		osimage, err = rhcos.QEMU(ctx, a)
+		osimage, err = rhcos.QEMU(ctx, arch)
 	case "openstack":
-		//if oi := config.Platform.OpenStack.ClusterOSImage; oi != "" {
-		//	osimage = oi
-		//	break
-		//}
-		osimage, err = rhcos.OpenStack(ctx, arch)
+		osimage, err = rhcos.OpenStack(ctx, archAmd64)
 	case "ovirt":
-		osimage, err = rhcos.OpenStack(ctx, arch)
+		osimage, err = rhcos.OpenStack(ctx, archAmd64)
 	case "kubevirt":
-		osimage, err = rhcos.OpenStack(ctx, arch)
+		osimage, err = rhcos.OpenStack(ctx, archAmd64)
 	case "azure":
-		osimage, err = rhcos.VHD(ctx, arch)
+		osimage, err = rhcos.VHD(ctx, archAmd64)
 	case "baremetal":
-		// Check for RHCOS image URL override
-		//if oi := config.Platform.BareMetal.ClusterOSImage; oi != "" {
-		//	osimage = oi
-		//	break
-		//}
 		// Note that baremetal IPI currently uses the OpenStack image
 		// because this contains the necessary ironic config drive
 		// ignition support, which isn't enabled in the UPI BM images
-		osimage, err = rhcos.OpenStack(ctx, arch)
+		osimage, err = rhcos.OpenStack(ctx, archAmd64)
 	case "vsphere":
-		// Check for RHCOS image URL override
-		//if config.Platform.VSphere.ClusterOSImage != "" {
-		//	osimage = config.Platform.VSphere.ClusterOSImage
-		//	break
-		//}
-		osimage, err = rhcos.VMware(ctx, arch)
+		osimage, err = rhcos.VMware(ctx, archAmd64)
 	case none.Name:
 	default:
 		return "", errors.New("invalid Platform")
@@ -105,42 +72,35 @@ func (b BundleInfo) getRhcosURL() (string, error) {
 
 }
 
-func (b BundleInfo) getRhcosName() (string, error) {
+func (bundle BundleInfo) getRhcosName() (string, error) {
 
-	ctx, _ := context.WithTimeout(context.TODO(), 30*time.Second)
-	meta, err := rhcos.FetchRHCOSBuild(ctx, arch)
-	// if err != nil {
-	// 	return "", errors.Wrap(err, "failed to fetch RHCOS metadata")
-	// }
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	meta, err := rhcos.FetchRHCOSBuild(ctx, archAmd64)
+	if err != nil {
+		return "", err
+	}
 
 	// get Platform
-	p := b.Platform
+	platfrm := bundle.Platform
 
 	// get arch
 	// var a types.Architecture = types.Architecture(b.Arch)
 
 	var filename string
-	switch p {
+	switch platfrm {
 	case "aws":
 		filename = meta.Images.AWS.Path
 	case "libvirt":
 		filename = meta.Images.QEMU.Path
 	case "openstack":
-		//if oi := config.Platform.OpenStack.ClusterOSImage; oi != "" {
-		//	osimage = oi
-		//	break
-		//}
 		filename = meta.Images.OpenStack.Path
 	case "ovirt":
 		filename = meta.Images.OpenStack.Path
 	case "kubevirt":
 		filename = meta.Images.OpenStack.Path
 	case "vsphere":
-		// Check for RHCOS image URL override
-		//if config.Platform.VSphere.ClusterOSImage != "" {
-		//	osimage = config.Platform.VSphere.ClusterOSImage
-		//	break
-		//}
 		filename = meta.Images.VMware.Path
 	case none.Name:
 	default:
@@ -156,15 +116,20 @@ func (b BundleInfo) getRhcosName() (string, error) {
 func (b BundleInfo) downRhcos(bundle *BundleRoot) error {
 
 	// First Get RHCOS URL for platform
-	// bundleGetRhcosURL(b)
-
 	url, err := b.getRhcosURL()
-	logrus.Info("RHCOS URL ", url)
-	logrus.Error(err)
+	if err == nil {
+		logrus.Info("RHCOS URL ", url)
+	} else {
+		return err
+	}
 
 	// Then get filepath to save
 	filename, err := b.getRhcosName()
-	logrus.Info(filename)
+	if err == nil {
+		logrus.Info(filename)
+	} else {
+		return err
+	}
 
 	filepath := bundle.BundleDir + "/" + bundle.SubTree.Rhcos + "/" + filename
 

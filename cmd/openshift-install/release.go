@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/openshift/installer/pkg/release"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -42,10 +43,10 @@ func newReleaseCreateBundleCmd() *cobra.Command {
 			cleanup := setupFileHook(rootOpts.dir)
 			defer cleanup()
 
-			release.CreateBundle(rootOpts.dir)
-			// if err != nil {
-			// 	logrus.Fatal(err)
-			// }
+			err := release.CreateBundle(rootOpts.dir)
+			if err != nil {
+				logrus.Fatal(err)
+			}
 		},
 	}
 }
